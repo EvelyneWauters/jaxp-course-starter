@@ -14,7 +14,9 @@ import java.util.List;
 public class PomFindDependencies implements ContentHandler {
     boolean foundDependency = false;
     boolean foundGroupId = false;
+    boolean foundArtifactId = false;
     List<String> allGroupIds = new ArrayList<>();
+    List<String> allArtifactIds = new ArrayList<>();
 
     @Override
     public void setDocumentLocator(Locator locator) {
@@ -28,8 +30,15 @@ public class PomFindDependencies implements ContentHandler {
 
     @Override
     public void endDocument() throws SAXException {
+        System.out.println("groupdId size : " + allGroupIds.size());
+
         for (String allGroupId : allGroupIds) {
-            System.out.println(allGroupId);
+            System.out.println("groupdId = " + allGroupId);
+        }
+
+        System.out.println("artifactId size : " + allArtifactIds.size());
+        for (String allArtifactId : allArtifactIds) {
+            System.out.println("artifactIds = " + allArtifactId);
         }
     }
 
@@ -49,21 +58,28 @@ public class PomFindDependencies implements ContentHandler {
             foundDependency = true;
         }   else if (foundDependency && qName.equals("groupId")) {
             foundGroupId = true;
+        }   else if (foundDependency && foundGroupId && qName.equals("artifactId")) {
+            foundArtifactId = true;
         }
     }
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
-        if(foundDependency && qName.equals("groupId"))  {
+
+        if (foundDependency && foundGroupId && qName.equals("artifactId"))   {
             foundDependency = false;
             foundGroupId = false;
+            foundArtifactId = false;
         }
     }
 
     @Override
     public void characters(char[] ch, int start, int length) throws SAXException {
-        if(foundDependency && foundGroupId)   {
+        if(foundDependency && foundGroupId && !foundArtifactId)   {
             allGroupIds.add(new String(ch, start, length));
+        }
+        if (foundArtifactId && foundGroupId && foundDependency)  {
+            allArtifactIds.add(new String(ch, start, length));
         }
     }
 
